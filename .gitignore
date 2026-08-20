@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+*.spec.bak
+
+# PyInstaller / 打包产物
+build/
+dist/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 日志（保留目录结构时可只忽略内容）
+logger/logger_data/*.log
+
+# 临时与本地数据
+*.xlsx
+!docs/**/*.xlsx
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
