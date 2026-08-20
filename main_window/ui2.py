@@ -7,13 +7,14 @@ from PyQt5.QtGui import QIcon, QPainter, QFont, QKeySequence
 from pyqtgraph import PlotWidget
 import pyqtgraph as pg
 from utils.path_helper import get_resource_path
+from main_window.theme import apply_theme
 
 class UI(object):
     def _make_temperature_plot(self, parent, title):
         """创建温度/功率双轴曲线控件。"""
         widget = PlotWidget(parent)
-        widget.setBackground("w")
-        widget.setTitle(title, color='#333')
+        widget.setBackground("#f7fafc")
+        widget.setTitle(title, color='#244158')
         widget.setLabel("bottom", "时间 (s)")
         plot_item = widget.getPlotItem()
         bottom_axis = plot_item.getAxis("bottom")
@@ -139,30 +140,57 @@ class UI(object):
         """
         总体水平布局
         """
-        self.layout_H = QHBoxLayout(self.centralwidget)
-        self.layout_H.setContentsMargins(3, 3, 3, 3)
+        self.layout_root = QVBoxLayout(self.centralwidget)
+        self.layout_root.setContentsMargins(16, 14, 16, 14)
+        self.layout_root.setSpacing(12)
+        self.layout_H = QHBoxLayout()
+        self.layout_H.setContentsMargins(0, 0, 0, 0)
+        self.layout_H.setSpacing(12)
         self.layout_H.setObjectName("layout_h")
+        self.header = QFrame(self.centralwidget)
+        self.header.setObjectName("appHeader")
+        header_layout = QHBoxLayout(self.header)
+        header_layout.setContentsMargins(20, 14, 20, 14)
+        header_layout.setSpacing(12)
+        header_text = QVBoxLayout()
+        header_text.setSpacing(1)
+        self.app_title = QLabel("EWOD 实验控制台")
+        self.app_title.setObjectName("appTitle")
+        self.app_subtitle = QLabel("玻璃基驱动线路板 · 数字微流控实验控制平台")
+        self.app_subtitle.setObjectName("appSubtitle")
+        header_text.addWidget(self.app_title)
+        header_text.addWidget(self.app_subtitle)
+        self.header_status = QLabel("设备未连接")
+        self.header_status.setObjectName("headerStatus")
+        self.header_status.setProperty("state", "notice")
+        self.header_status.setAlignment(Qt.AlignCenter)
+        header_layout.addLayout(header_text)
+        header_layout.addStretch(1)
+        header_layout.addWidget(self.header_status)
+        self.layout_root.addWidget(self.header)
         """左侧"""
         self.groupBox1 = QGroupBox(self.centralwidget)
         self.groupBox1.setContentsMargins(3, 3, 3, 3)
-        self.groupBox1.setTitle("系统初始化")
+        self.groupBox1.setTitle("01  系统初始化")
         self.groupBox1.setStyleSheet("""
             QGroupBox {border: 1px solid;margin-top: 1.5ex;padding: 10px;}
             QGroupBox::title {subcontrol-origin: margin;subcontrol-position: top center;padding: 0 5px;}
         """)
         """中间垂直布局"""
-        self.layout_V_Middle = QVBoxLayout(self.centralwidget)
-        self.layout_V_Middle.setContentsMargins(3, 3, 3, 3)
+        self.layout_V_Middle = QVBoxLayout()
+        self.layout_V_Middle.setContentsMargins(0, 0, 0, 0)
+        self.layout_V_Middle.setSpacing(12)
         self.layout_V_Middle.setObjectName("layout_V_Middle")
         """右侧垂直布局"""
-        self.layout_V_Right = QVBoxLayout(self.centralwidget)
-        self.layout_V_Right.setContentsMargins(3, 3, 3, 3)
+        self.layout_V_Right = QVBoxLayout()
+        self.layout_V_Right.setContentsMargins(0, 0, 0, 0)
+        self.layout_V_Right.setSpacing(12)
         self.layout_V_Right.setObjectName("layout_V_Right")
         """左侧部分"""
         self.layout_V_Left = QVBoxLayout(self.groupBox1)
         """分组框一"""
         self.groupBox1_1 = QGroupBox(self.groupBox1)
-        self.groupBox1_1.setTitle("一 串口设置")
+        self.groupBox1_1.setTitle("串口设置")
         self.groupBox1_1.setStyleSheet("""QGroupBox {border: 1px solid;border-radius: 15px;margin-top: 1.5ex;padding: 10px;}
                                         QGroupBox::title {subcontrol-origin: margin;subcontrol-position: top center;padding: 0 5px;}""")
         self.gird_layout = QGridLayout(self.groupBox1_1)
@@ -186,6 +214,8 @@ class UI(object):
         self.button1.setText("芯片物理连接正常:")
         self.button1.setStyleSheet(button_style)
         self.label1_button= QLabel(self.groupBox1_1)
+        self.label1_button.setObjectName("linkStatus")
+        self.label1_button.setProperty("state", "idle")
         self.label1_button.setStyleSheet(label_button_style)
         self.label1_button.setText("正常")
         self.label1_button.setAlignment(Qt.AlignCenter)
@@ -194,6 +224,8 @@ class UI(object):
         self.button2.setText("左侧加热连接正常:")
         self.button2.setStyleSheet(button_style)
         self.label2_button = QLabel(self.groupBox1_1)
+        self.label2_button.setObjectName("linkStatus")
+        self.label2_button.setProperty("state", "idle")
         self.label2_button.setStyleSheet(label_button_style)
         self.label2_button.setText("正常")
         self.label2_button.setAlignment(Qt.AlignCenter)
@@ -202,6 +234,8 @@ class UI(object):
         self.button3.setText("右侧加热连接正常:")
         self.button3.setStyleSheet(button_style)
         self.label3_button = QLabel(self.groupBox1_1)
+        self.label3_button.setObjectName("linkStatus")
+        self.label3_button.setProperty("state", "idle")
         self.label3_button.setStyleSheet(label_button_style)
         self.label3_button.setText("正常")
         self.label3_button.setAlignment(Qt.AlignCenter)
@@ -218,7 +252,7 @@ class UI(object):
         self.gird_layout.addWidget(self.label3_button, 5, 6, 1, 1)
         """分组框二"""
         self.groupBox1_2 = QGroupBox(self.groupBox1)
-        self.groupBox1_2.setTitle("二 参数设置")
+        self.groupBox1_2.setTitle("参数设置")
         self.groupBox1_2.setStyleSheet("""QGroupBox {border: 1px solid;border-radius: 15px;margin-top: 1.5ex;padding: 10px;}
                                         QGroupBox::title {subcontrol-origin: margin;subcontrol-position: top center;padding: 0 5px;}""")
         self.grid_layout2 = QGridLayout(self.groupBox1_2)
@@ -252,7 +286,7 @@ class UI(object):
         self.grid_layout2.addWidget(self.lineEdit3_2, 3, 4, 1, 3)
         """分组框三"""
         self.groupBox1_3 = QGroupBox(self.groupBox1)
-        self.groupBox1_3.setTitle("三 日志信息")
+        self.groupBox1_3.setTitle("运行日志")
         self.groupBox1_3.setStyleSheet("""QGroupBox {border: 1px solid;border-radius: 15px;margin-top: 1.5ex;padding: 10px;}
                                         QGroupBox::title {subcontrol-origin: margin;subcontrol-position: top center;padding: 0 5px;}""")
         self.layout_V_Left_V3 = QVBoxLayout(self.groupBox1_3)
@@ -260,7 +294,7 @@ class UI(object):
         self.layout_V_Left_V3.addWidget(self.log_information)
         """分组框四"""
         self.groupBox1_4 = QGroupBox(self.groupBox1)
-        self.groupBox1_4.setTitle("四 串口数据信息")
+        self.groupBox1_4.setTitle("串口数据")
         self.groupBox1_4.setStyleSheet("""QGroupBox {border: 1px solid;border-radius: 15px;margin-top: 1.5ex;padding: 10px;}
                                                 QGroupBox::title {subcontrol-origin: margin;subcontrol-position: top center;padding: 0 5px;}""")
         self.layout_V_Left_V4 = QHBoxLayout(self.groupBox1_4)
@@ -281,6 +315,7 @@ class UI(object):
         """
         """上侧"""
         self.groupBox2 = QGroupBox(self.centralwidget)
+        self.groupBox2.setTitle("02  芯片电极可视化")
         self.groupBox2.setStyleSheet("""QGroupBox {border: 1px solid;border-radius: 15px;margin-top: 1.5ex;padding: 10px;}
                                         QGroupBox::title {subcontrol-origin: margin;subcontrol-position: top center;padding: 0 5px;}""")
         self.layout_V_Middle_V1 = QVBoxLayout(self.groupBox2)
@@ -290,6 +325,7 @@ class UI(object):
         self.layout_V_Middle_V1.addWidget(self.graphicsView1)
         """下侧"""
         self.groupBox3 = QGroupBox(self.centralwidget)
+        self.groupBox3.setTitle("03  实验操作")
         self.groupBox3.setStyleSheet("""QGroupBox {border: 1px solid;border-radius: 15px;margin-top: 1.5ex;padding: 10px;}
                                         QGroupBox::title {subcontrol-origin: margin;subcontrol-position: top center;padding: 0 5px;}""")
         self.layout_V_Middle_V2 = QVBoxLayout(self.groupBox3)
@@ -312,6 +348,7 @@ class UI(object):
         sizePolicy.setHeightForWidth(self.tab1.sizePolicy().hasHeightForWidth())
 
         self.button_container = QFrame(self.tab1)
+        self.button_container.setObjectName("button_container")
         self.button_container.setStyleSheet("QFrame { background-color: #808080; }")  # 更深的灰色背景
         self.grid_layout3 = QGridLayout(self.button_container)
         self.grid_layout3.setContentsMargins(10, 10, 10, 10)  # 设置内边距
@@ -439,7 +476,7 @@ class UI(object):
         self.layout_droplet = QVBoxLayout(self.tab3)
 
         self.droplet_plot_widget = PlotWidget(self.tab3)
-        self.droplet_plot_widget.setBackground("w")
+        self.droplet_plot_widget.setBackground("#f7fafc")
         self.droplet_plot_widget.setLabel("bottom", "电极位置")
         self.droplet_plot_widget.setLabel("left", "检测概率")
 
@@ -495,9 +532,9 @@ class UI(object):
         右边部分
         """
         self.groupBox4 = QGroupBox(self.centralwidget)
+        self.groupBox4.setTitle("04  摄像头采集（双击放大）")
         self.groupBox4.setStyleSheet("""QGroupBox {border: 1px solid;margin-top: 1.5ex;padding: 10px;}
                                         QGroupBox::title {subcontrol-origin: margin;subcontrol-position: top center;padding: 0 5px;}""")
-        self.groupBox4.setTitle("摄像头采集窗口（双击放大）")
         self.layout_V_Right_V1 = QVBoxLayout(self.groupBox4)
         self.layout_V_Right_V1.setContentsMargins(0, 0, 0, 0)
         self.layout_V_Right_V1.setSpacing(0)
@@ -556,9 +593,9 @@ class UI(object):
         self.layout_V_Right_V1.setStretch(1, 1)   # 按钮区域占较少空间
 
         self.groupBox5 = QGroupBox(self.centralwidget)
+        self.groupBox5.setTitle("05  温度 / 荧光监测")
         self.groupBox5.setStyleSheet("""QGroupBox {border: 1px solid;margin-top: 1.5ex;padding: 10px;}
                                         QGroupBox::title {subcontrol-origin: margin;subcontrol-position: top center;padding: 0 5px;}""")
-        self.groupBox5.setTitle("温度/荧光监测窗口")
         self.layout_V_Right_V2 = QVBoxLayout(self.groupBox5)
         self.tabWidget2 = QTabWidget(self.groupBox5)
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -583,8 +620,8 @@ class UI(object):
         self.layout_fluor_main = QVBoxLayout(self.tab_fluor)
 
         self.fluorescence_widget = PlotWidget(self.tab_fluor)
-        self.fluorescence_widget.setBackground("w")
-        self.fluorescence_widget.setTitle("荧光曲线（双击放大）", color='#333')
+        self.fluorescence_widget.setBackground("#f7fafc")
+        self.fluorescence_widget.setTitle("荧光曲线（双击放大）", color='#244158')
         self.fluorescence_widget.setLabel("bottom", "时间 (s)")
         plot_item_fluor = self.fluorescence_widget.getPlotItem()
         fluor_axis = plot_item_fluor.getAxis("left")
@@ -674,5 +711,7 @@ class UI(object):
         self.layout_H.setStretch(0,1)
         self.layout_H.setStretch(1,3)
         self.layout_H.setStretch(2,3)
+        self.layout_root.addLayout(self.layout_H, 1)
         MainWindow.setCentralWidget(self.centralwidget)
+        apply_theme(MainWindow)
         QMetaObject.connectSlotsByName(MainWindow)

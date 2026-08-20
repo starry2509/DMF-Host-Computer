@@ -33,7 +33,7 @@ class PlotZoomWindow(QMainWindow):
         self.resize(1200, 800)
 
         self._plot = pg.PlotWidget()
-        self._plot.setBackground("w")
+        self._plot.setBackground("#f7fafc")
         self._plot.setLabel("bottom", "时间 (s)")
         self._plot.showGrid(x=True, y=True, alpha=0.15)
         plot_item = self._plot.getPlotItem()
@@ -134,7 +134,7 @@ class CamZoomWindow(QMainWindow):
         self.resize(1200, 800)
         self._label = QLabel()
         self._label.setAlignment(Qt.AlignCenter)
-        self._label.setStyleSheet("background: #222; color: white; font-size: 48px; font-weight: bold;")
+        self._label.setStyleSheet("background: #0a1e30; color: #b9d1e4; font-size: 48px; font-weight: bold;")
         self._label.setText("CAM")
         self.setCentralWidget(self._label)
         self._sync_timer = QTimer(self)
@@ -611,29 +611,36 @@ class MainWindow(QMainWindow, UI):
     def open_port(self):
         if self.driver.open(findall(r'COM\d+',self.comboBox.currentText())[0]):
             self.button_open_serial_port.setEnabled(False)
+            self._set_header_status("串口已连接", "connected")
     def flush_port(self):
         self.button_open_serial_port.setEnabled(True)
         self.button_close_serial_port.setEnabled(True)
         self.comboBox.clear()
         self.comboBox.addItems(self.driver.find_available_port())
+        self._set_header_status("端口列表已刷新", "notice")
     def close_port(self):
         if self.driver.close():
             self.button_close_serial_port.setEnabled(False)
+            self._set_header_status("设备未连接", "notice")
+
+    def _set_header_status(self, text, state):
+        """Update the compact connection indicator in the header."""
+        self.header_status.setText(text)
+        self.header_status.setProperty("state", state)
+        self.header_status.style().unpolish(self.header_status)
+        self.header_status.style().polish(self.header_status)
+
+    @staticmethod
+    def _set_link_status(label, healthy):
+        label.setProperty("state", "ok" if healthy else "error")
+        label.style().unpolish(label)
+        label.style().polish(label)
     def phy_link(self):
-        if self.driver.bottom_cmd1()==0:
-            self.label1_button.setStyleSheet("background-color: green;")
-        else:
-            self.label1_button.setStyleSheet("background-color: red;")
+        self._set_link_status(self.label1_button, self.driver.bottom_cmd1() == 0)
     def left_link(self):
-        if self.driver.temp_cmd1(0x00)==0:
-            self.label2_button.setStyleSheet("background-color: green;")
-        else:
-            self.label2_button.setStyleSheet("background-color: red;")
+        self._set_link_status(self.label2_button, self.driver.temp_cmd1(0x00) == 0)
     def right_link(self):
-        if self.driver.temp_cmd2(0x00)==0:
-            self.label3_button.setStyleSheet("background-color: green;")
-        else:
-            self.label3_button.setStyleSheet("background-color: red;")
+        self._set_link_status(self.label3_button, self.driver.temp_cmd2(0x00) == 0)
     """手动操控界面槽函数"""
     def _driving_electrodes(self):
         return [e for e in self.dmf_chip_scene._iter_electrodes() if e.isDrive and not e.isPinned]
@@ -1757,7 +1764,10 @@ class MainWindow(QMainWindow, UI):
 
 if __name__ == "__main__":
     import sys
+    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
+    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
     app = QApplication(sys.argv)
+    app.setStyle("Fusion")
     mywindow = MainWindow()
     mywindow.show()
     sys.exit(app.exec_())
